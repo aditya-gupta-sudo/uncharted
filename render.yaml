@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: car-manual-api-aditya
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile.backend
+    dockerContext: .
+    healthCheckPath: /api/v1/health/
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: DATABASE_NAME
+        sync: false
+      - key: CHUNKS_COLLECTION
+        value: manuals
+      - key: GCP_PROJECT_ID
+        sync: false
+      - key: GCP_LOCATION
+        value: us-central1
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/google-service-account.json
+      - key: VOYAGE_API_KEY
+        sync: false
+      - key: MULTIMODAL_VECTOR_INDEX_NAME
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+
+  - type: web
+    name: car-manual-explorer-aditya
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile.frontend
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: INTERNAL_API_URL
+        value: https://car-manual-api-aditya.onrender.com

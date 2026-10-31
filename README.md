@@ -89,6 +89,18 @@ Before you begin working with this project, ensure that you have the following p
 
 - **Docker (Optional)**: For containerized deployment, Docker is required. Install it from the [Docker website](https://www.docker.com/get-started).
 
+## Deploy on Render
+
+This repository includes a Render Blueprint for the Next.js frontend and FastAPI backend. To deploy:
+
+1. Sign in to [Render](https://render.com/) and choose **New + → Blueprint**.
+2. Connect `aditya-gupta-sudo/uncharted` and select the `main` branch.
+3. Review and create the two free services. Enter the MongoDB URI, database name, GCP project ID, Voyage AI key, multimodal vector index name, and AWS Bedrock credentials when prompted.
+4. In the backend service's **Environment → Secret Files**, upload your Google Cloud service-account JSON as `google-service-account.json`. The Blueprint points `GOOGLE_APPLICATION_CREDENTIALS` to that file.
+5. Add the Render backend service URL to MongoDB Atlas Network Access if your cluster restricts inbound connections. The deployed frontend URL is shown in the Render dashboard.
+
+Free Render services can sleep when idle and take longer to respond to the first request. Keep production credentials in Render's environment settings and secret files, never in the repository.
+
 ## Initial Configuration
 
 ### Obtain your MongoDB Connection String

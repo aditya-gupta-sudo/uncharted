@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile.backend
     ports:
       - "8000:8000"
+    environment:
+      PORT: 8000
     container_name: back
   front:
     build:
@@ -14,4 +16,6 @@ services:
       dockerfile: Dockerfile.frontend
     ports:
       - "3000:3000"
+    environment:
+      PORT: 3000
     container_name: front
