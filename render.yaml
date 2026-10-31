@@ -23,7 +23,7 @@ services:
       - key: CHATCOMPLETIONS_MODEL_ID
         value: gemini-3.8-flash
       - key: DOCUMENT_VECTOR_INDEX_NAME
-        value: manual_documents_vector_index
+        value: vector_index
       - key: GOOGLE_APPLICATION_CREDENTIALS
         value: /etc/secrets/google-service-account.json
       - key: VOYAGE_API_KEY

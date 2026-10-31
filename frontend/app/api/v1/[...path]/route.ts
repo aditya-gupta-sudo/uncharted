@@ -41,6 +41,10 @@ async function handleProxy(request: NextRequest, pathSegments: string[]) {
     // Remove host header to avoid confusion
     headers.delete('host');
     headers.delete('connection');
+    // Preserve the original multipart boundary when forwarding browser uploads.
+    // Re-serializing FormData while retaining its old Content-Type boundary
+    // causes FastAPI to reject the request as malformed.
+    headers.delete('content-length');
     
     const fetchOptions: RequestInit = {
       method: request.method,
@@ -49,14 +53,7 @@ async function handleProxy(request: NextRequest, pathSegments: string[]) {
 
     // Add body for non-GET/HEAD requests
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      const contentType = request.headers.get('content-type');
-      if (contentType?.includes('application/json')) {
-        fetchOptions.body = JSON.stringify(await request.json());
-      } else if (contentType?.includes('multipart/form-data')) {
-        fetchOptions.body = await request.formData();
-      } else {
-        fetchOptions.body = await request.text();
-      }
+      fetchOptions.body = await request.arrayBuffer();
     }
 
     // Forward request to backend

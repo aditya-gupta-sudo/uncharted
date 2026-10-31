@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # Search configuration - Hardcoded for car manuals
     VECTOR_DIMENSIONS: int = 768
     VECTOR_INDEX_NAME: str = "manual_vector_search_index"
-    DOCUMENT_VECTOR_INDEX_NAME: str = Field("manual_documents_vector_index", env="DOCUMENT_VECTOR_INDEX_NAME")
+    DOCUMENT_VECTOR_INDEX_NAME: str = Field("vector_index", env="DOCUMENT_VECTOR_INDEX_NAME")
     TEXT_INDEX_NAME: str = "manual_text_search_index"
     VECTOR_FIELD_NAME: str = "embedding"
     
