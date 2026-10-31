@@ -32,6 +32,19 @@ class FakeCollection:
 
 
 class DocumentUnitTests(unittest.IsolatedAsyncioTestCase):
+    def test_rag_client_requests_vertex_cloud_platform_scope(self):
+        from app.core import config
+        from app.services import rag
+        settings = SimpleNamespace(CHATCOMPLETIONS_MODEL_ID="gemini-test", GCP_PROJECT_ID="project", GCP_CHAT_LOCATION="global")
+        service = RAGService.__new__(RAGService)
+        service.settings = settings
+        with patch.object(rag, "get_settings", return_value=settings), \
+             patch.object(rag.google.auth, "default", return_value=(object(), "project")) as auth_default, \
+             patch.object(rag.genai, "Client", return_value=object()) as client:
+            service._initialize_client()
+        auth_default.assert_called_once_with(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+        self.assertEqual(client.call_args.kwargs["location"], "global")
+
     def test_document_ai_ocr_splits_at_processor_page_limit(self):
         from pypdf import PdfWriter
         writer = PdfWriter()

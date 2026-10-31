@@ -14,6 +14,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
 from pypdf import PdfWriter
+from pymongo.errors import PyMongoError
 import google.auth
 from google.auth.transport.requests import AuthorizedSession
 
@@ -137,8 +138,12 @@ async def upload_pdf(file: UploadFile = File(...)):
 
     document_id = str(uuid4())
     now = datetime.now(timezone.utc)
-    documents_collection.insert_one({"document_id": document_id, "filename": filename,
-        "page_count": len(reader.pages), "chunk_count": 0, "status": "processing", "created_at": now})
+    try:
+        documents_collection.insert_one({"document_id": document_id, "filename": filename,
+            "page_count": len(reader.pages), "chunk_count": 0, "status": "processing", "created_at": now})
+    except PyMongoError as exc:
+        logger.exception("Could not create upload record in MongoDB")
+        raise HTTPException(status_code=503, detail="MongoDB is unreachable. Check Atlas Network Access and the connection string.") from exc
     write_started = False
     try:
         embedder = EmbeddingService()
@@ -183,9 +188,13 @@ async def list_documents():
     collection = get_mongodb().get_collection(DOCUMENTS_COLLECTION)
     if collection is None:
         raise HTTPException(status_code=503, detail="MongoDB is unavailable.")
-    rows = collection.find({}, {"_id": 0}).sort("created_at", -1).limit(100)
-    return [{**row, "created_at": row["created_at"].isoformat() if row.get("created_at") else None}
-            for row in rows]
+    try:
+        rows = collection.find({}, {"_id": 0}).sort("created_at", -1).limit(100)
+        return [{**row, "created_at": row["created_at"].isoformat() if row.get("created_at") else None}
+                for row in rows]
+    except PyMongoError as exc:
+        logger.exception("Could not list uploaded documents from MongoDB")
+        raise HTTPException(status_code=503, detail="MongoDB is unreachable. Check Atlas Network Access and the connection string.") from exc
 
 
 @ask_router.post("/ask")

@@ -23,7 +23,12 @@ class RAGService:
     def _initialize_client(self):
         """Initialize the Vertex AI client"""
         try:
-            credentials, _ = google.auth.default()
+            # Gen AI's Vertex client needs an OAuth cloud-platform scope when
+            # refreshing ADC credentials. Without it, service-account token
+            # refresh fails with invalid_scope at answer-generation time.
+            credentials, _ = google.auth.default(
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
             return genai.Client(
                 vertexai=True,
                 project=self.settings.GCP_PROJECT_ID,

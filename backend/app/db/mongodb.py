@@ -25,7 +25,14 @@ class MongoDB:
         """Initialize the MongoDB connection"""
         try:
             settings = get_settings()
-            self._client = MongoClient(settings.MONGODB_URI, appname=settings.PROJECT_NAME)
+            # Fail promptly when Atlas cannot be reached (for example, when the
+            # current client IP is missing from Atlas Network Access).
+            self._client = MongoClient(
+                settings.MONGODB_URI,
+                appname=settings.PROJECT_NAME,
+                serverSelectionTimeoutMS=8000,
+                connectTimeoutMS=5000,
+            )
             self._db = self._client[settings.DATABASE_NAME]
             logger.info(f"Connected to MongoDB: {settings.DATABASE_NAME}")
         except Exception as e:
