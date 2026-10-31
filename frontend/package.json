@@ -54,6 +54,6 @@
     "@types/react": "19.1.0",
     "license-checker": "^25.0.1",
     "path-browserify": "^1.0.1",
-    "typescript": "5.8.2"
+    "typescript": "^5.8.2"
   }
 }

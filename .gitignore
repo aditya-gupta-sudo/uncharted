@@ -184,3 +184,8 @@ makefile
 /reference
 /images
 security_check.sh
+
+# Local source manuals and generated PDF/chunk outputs
+/data/
+/split_pdfs/
+/final_chunks_output.json
