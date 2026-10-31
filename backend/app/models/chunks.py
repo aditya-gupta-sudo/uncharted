@@ -33,6 +33,8 @@ class ChunkMetadata(BaseModel):
 class Chunk(BaseModel):
     """Document chunk with rich context - supports both text chunks and image documents"""
     id: Optional[str] = Field(None, description="Unique identifier for the chunk (e.g., chunk_00001)")
+    document_id: Optional[str] = Field(None, description="Uploaded source document ID")
+    source_filename: Optional[str] = Field(None, description="Original uploaded PDF filename")
     text: str = Field(..., description="Text content of the chunk")
     context: Optional[str] = Field(None, description="Context string for the chunk")
     breadcrumb_trail: Optional[str] = Field(None, description="Hierarchical context path")

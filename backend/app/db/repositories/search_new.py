@@ -64,6 +64,8 @@ class SearchRepository:
                 "context": 1,
                 "breadcrumb_trail": 1,
                 "page_numbers": 1,
+                "document_id": 1,
+                "source_filename": 1,
                 "content_type": 1,
                 "metadata": 1,
                 "vehicle_systems": 1,
@@ -77,7 +79,9 @@ class SearchRepository:
         self, 
         query_embedding: List[float],
         limit: int = 5,
-        num_candidates_multiplier: int = 10
+        num_candidates_multiplier: int = 10,
+        document_ids: Optional[List[str]] = None,
+        index_name: Optional[str] = None,
     ) -> List[SearchResult]:
         """
         Performs a pure vector search using Atlas Vector Search
@@ -113,18 +117,18 @@ class SearchRepository:
             num_candidates = limit * num_candidates_multiplier
             
             # Set up the vector search pipeline
-            pipeline = [
-                {
+            vector_stage = {
                     "$vectorSearch": {
-                        "index": self.vector_index_name,
+                        "index": index_name or self.vector_index_name,
                         "path": self.vector_field_name,
                         "queryVector": query_embedding,
                         "numCandidates": num_candidates,
                         "limit": limit
                     }
-                },
-                self._get_common_projection("vectorSearchScore")
-            ]
+                }
+            if document_ids:
+                vector_stage["$vectorSearch"]["filter"] = {"document_id": {"$in": document_ids}}
+            pipeline = [vector_stage, self._get_common_projection("vectorSearchScore")]
             
             if self.debug_mode:
                 debug_info["pipeline"] = pipeline
@@ -149,6 +153,8 @@ class SearchRepository:
                     context=result.get("context"),
                     breadcrumb_trail=result.get("breadcrumb_trail"),
                     page_numbers=result.get("page_numbers"),
+                    document_id=result.get("document_id"),
+                    source_filename=result.get("source_filename"),
                     content_type=result.get("content_type"),
                     metadata=result.get("metadata"),
                     vehicle_systems=result.get("vehicle_systems")
@@ -165,12 +171,16 @@ class SearchRepository:
                 logger.error(f"  -> Hint: Ensure the vector index '{self.vector_index_name}' exists.")
             if self.debug_mode:
                 debug_info["error"] = str(ofe.details)
+            if document_ids:
+                raise RuntimeError("Document-scoped vector search failed; check the document vector index filter definition.") from ofe
             return []
         except Exception as e:
             logger.error(f"Error in vector search: {str(e)}")
             traceback.print_exc()
             if self.debug_mode:
                 debug_info["error"] = str(e)
+            if document_ids:
+                raise RuntimeError("Document-scoped vector search failed.") from e
             return []
     
     async def text_search(

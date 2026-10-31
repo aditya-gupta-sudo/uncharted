@@ -377,6 +377,7 @@ export default function BrowsePage() {
               This page displays car manual chunks stored as MongoDB documents. Each chunk is a document in the MongoDB collection, 
               representing a semantically meaningful section of content that balances size, context, and coherence.
             </Body>
+            <a href="/upload" style={{ color: palette.green.dark2, fontWeight: 600 }}>Upload a PDF or ask a question →</a>
             <div style={{ 
               backgroundColor: palette.green.light3, 
               padding: spacing[2], 

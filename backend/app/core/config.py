@@ -22,14 +22,16 @@ class Settings(BaseSettings):
     # GCP Vertex AI configuration
     GCP_PROJECT_ID: str = Field(..., env="GCP_PROJECT_ID")
     GCP_LOCATION: str = Field("us-central1", env="GCP_LOCATION")
+    GCP_CHAT_LOCATION: str = Field("global", env="GCP_CHAT_LOCATION")
     
     # Model configuration - Hardcoded for car manuals
     EMBEDDINGS_MODEL_ID: str = "text-embedding-005"
-    CHATCOMPLETIONS_MODEL_ID: str = "anthropic.claude-3-haiku-20240307-v1:0"
+    CHATCOMPLETIONS_MODEL_ID: str = Field("gemini-3.8-flash", env="CHATCOMPLETIONS_MODEL_ID")
     
     # Search configuration - Hardcoded for car manuals
     VECTOR_DIMENSIONS: int = 768
     VECTOR_INDEX_NAME: str = "manual_vector_search_index"
+    DOCUMENT_VECTOR_INDEX_NAME: str = Field("manual_documents_vector_index", env="DOCUMENT_VECTOR_INDEX_NAME")
     TEXT_INDEX_NAME: str = "manual_text_search_index"
     VECTOR_FIELD_NAME: str = "embedding"
     
@@ -38,6 +40,8 @@ class Settings(BaseSettings):
     MULTIMODAL_MODEL_ID: str = Field("voyage-multimodal-3", env="MULTIMODAL_MODEL_ID")
     MULTIMODAL_VECTOR_INDEX_NAME: str = Field(..., env="MULTIMODAL_VECTOR_INDEX_NAME")
     MULTIMODAL_VECTOR_DIMENSIONS: int = 1024
+    MAX_PDF_UPLOAD_MB: int = Field(10, ge=1, le=25, env="MAX_PDF_UPLOAD_MB")
+    MAX_PDF_PAGES: int = Field(300, ge=1, le=1000, env="MAX_PDF_PAGES")
     GRIDFS_BUCKET_NAME: str = "fs"
     
     # Document configuration - Hardcoded for car manuals

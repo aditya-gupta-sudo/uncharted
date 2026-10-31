@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
-from app.api.routes import chunks, search, health, graph_search, images
+from app.api.routes import chunks, search, health, graph_search, images, documents
 
 # Configure logging
 logging.basicConfig(
@@ -45,6 +45,8 @@ app.include_router(chunks.router, prefix=f"{settings.API_V1_STR}/chunks", tags=[
 app.include_router(search.router, prefix=f"{settings.API_V1_STR}/search", tags=["search"])
 app.include_router(graph_search.router, prefix=f"{settings.API_V1_STR}/search", tags=["search"])
 app.include_router(images.router, prefix=f"{settings.API_V1_STR}/images", tags=["images"])
+app.include_router(documents.router, prefix=f"{settings.API_V1_STR}/documents", tags=["documents"])
+app.include_router(documents.ask_router, prefix=settings.API_V1_STR, tags=["RAG"])
 
 # FastAPI will now automatically redirect requests with/without trailing slashes
 # This provides better compatibility with frontend proxy requests

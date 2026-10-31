@@ -1,5 +1,12 @@
 #-------------------------------------------------------- General --------------------------------------------------------
 
+# Never send local credentials into Docker build contexts
+**/.env
+**/.env.*
+**/*service-account*.json
+**/credentials*.json
+**/*.pem
+
 # Byte-compiled files
 __pycache__
 *.py[cod]

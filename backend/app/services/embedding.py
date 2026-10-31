@@ -76,3 +76,16 @@ class EmbeddingService:
         except Exception as e:
             logger.error(f"Failed to generate embedding: {e}")
             raise
+
+    async def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Generate embeddings in Vertex AI batches (up to 250 texts per request)."""
+        try:
+            vectors: List[List[float]] = []
+            for start in range(0, len(texts), 250):
+                batch = texts[start:start + 250]
+                embeddings = await self.model.get_embeddings_async(batch)
+                vectors.extend(item.values for item in embeddings)
+            return vectors
+        except Exception as e:
+            logger.error(f"Failed to generate embeddings: {e}")
+            raise

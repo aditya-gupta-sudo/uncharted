@@ -9,6 +9,8 @@ class SearchResult(BaseModel):
     text_score: Optional[float] = Field(None, description="Text search component score")
     raw_score: Optional[float] = Field(None, description="Raw unprocessed score for debugging")
     chunk_id: Optional[str] = Field(None, description="ID of the matching chunk")
+    document_id: Optional[str] = Field(None, description="Uploaded source document ID")
+    source_filename: Optional[str] = Field(None, description="Original source PDF filename")
     text: str = Field(..., description="Text content of the chunk")
     context: Optional[str] = Field(None, description="Context string for the chunk")
     breadcrumb_trail: Optional[str] = Field(None, description="Hierarchical context path")
