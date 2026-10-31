@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import io
+import asyncio
+import base64
 import logging
 import re
 from datetime import datetime, timezone
@@ -11,6 +13,9 @@ from uuid import uuid4
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
+from pypdf import PdfWriter
+import google.auth
+from google.auth.transport.requests import AuthorizedSession
 
 from app.core.config import get_settings
 from app.db.mongodb import get_mongodb
@@ -25,6 +30,40 @@ ask_router = APIRouter()
 DOCUMENTS_COLLECTION = "manual_documents"
 CHUNK_CHARS = 1800
 CHUNK_OVERLAP = 250
+OCR_PAGES_PER_REQUEST = 15
+
+
+def _ocr_pdf_pages(payload: bytes, page_count: int, settings) -> list[str]:
+    """OCR a PDF in Document AI's 15-page online request chunks."""
+    if not settings.DOCUMENT_AI_PROCESSOR_NAME:
+        raise HTTPException(status_code=503, detail="This PDF needs OCR. Configure DOCUMENT_AI_PROCESSOR_NAME and grant the service account Document AI access.")
+    credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+    session = AuthorizedSession(credentials)
+    reader = PdfReader(io.BytesIO(payload), strict=False)
+    page_texts: list[str] = []
+    processor = settings.DOCUMENT_AI_PROCESSOR_NAME
+    endpoint = f"https://{settings.DOCUMENT_AI_LOCATION}-documentai.googleapis.com/v1/{processor}:process"
+    for start in range(0, page_count, OCR_PAGES_PER_REQUEST):
+        writer = PdfWriter()
+        end = min(start + OCR_PAGES_PER_REQUEST, page_count)
+        for page_index in range(start, end):
+            writer.add_page(reader.pages[page_index])
+        buffer = io.BytesIO()
+        writer.write(buffer)
+        response = session.post(endpoint, json={"rawDocument": {
+            "content": base64.b64encode(buffer.getvalue()).decode("ascii"),
+            "mimeType": "application/pdf"}}, timeout=120)
+        response.raise_for_status()
+        document = response.json().get("document", {})
+        text = document.get("text", "")
+        pages = document.get("pages", [])
+        for page_offset in range(end - start):
+            if page_offset >= len(pages):
+                page_texts.append("")
+                continue
+            segments = pages[page_offset].get("layout", {}).get("textAnchor", {}).get("textSegments", [])
+            page_texts.append(" ".join(text[int(seg.get("startIndex", 0)):int(seg.get("endIndex", 0))] for seg in segments).strip())
+    return page_texts
 
 
 class AskRequest(BaseModel):
@@ -72,14 +111,23 @@ async def upload_pdf(file: UploadFile = File(...)):
             raise HTTPException(status_code=422, detail="Encrypted PDFs are not supported.")
         if not reader.pages or len(reader.pages) > settings.MAX_PDF_PAGES:
             raise HTTPException(status_code=422, detail=f"PDF must contain 1 to {settings.MAX_PDF_PAGES} pages.")
-        page_chunks = [(page_no, chunk) for page_no, page in enumerate(reader.pages, 1)
-                       for chunk in _split_page(page.extract_text() or "")]
+        page_texts = [page.extract_text() or "" for page in reader.pages]
     except HTTPException:
         raise
     except Exception as exc:
         raise HTTPException(status_code=422, detail="Could not read this PDF.") from exc
+    if any(not text.strip() for text in page_texts):
+        try:
+            page_texts = await asyncio.to_thread(_ocr_pdf_pages, payload, len(reader.pages), settings)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.exception("Document AI OCR failed")
+            raise HTTPException(status_code=502, detail="OCR failed. Verify the Document AI processor, region, API, and service-account permissions.") from exc
+    page_chunks = [(page_no, chunk) for page_no, text in enumerate(page_texts, 1)
+                   for chunk in _split_page(text)]
     if not page_chunks:
-        raise HTTPException(status_code=422, detail="PDF contains no extractable text. Scanned PDFs require OCR and are not supported by this upload flow.")
+        raise HTTPException(status_code=422, detail="PDF contains no readable text after OCR. Check that it is readable and not blank.")
 
     mongodb = get_mongodb()
     chunks_collection = mongodb.get_collection(settings.CHUNKS_COLLECTION)
@@ -124,7 +172,10 @@ async def upload_pdf(file: UploadFile = File(...)):
         documents_collection.update_one({"document_id": document_id}, {"$set": {
             "status": "failed", "error": "Ingestion failed", "failed_at": datetime.now(timezone.utc)}})
         logger.exception("PDF ingestion failed for document %s", document_id)
-        raise HTTPException(status_code=502, detail="PDF ingestion failed; the document was not marked ready.") from exc
+        detail = "PDF ingestion failed; the document was not marked ready."
+        if isinstance(exc, RuntimeError) and "DOCUMENT_AI_PROCESSOR_NAME" in str(exc):
+            detail = "This PDF needs OCR. Configure DOCUMENT_AI_PROCESSOR_NAME and grant the service account Document AI access."
+        raise HTTPException(status_code=502, detail=detail) from exc
 
 
 @router.get("")

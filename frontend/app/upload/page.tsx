@@ -70,7 +70,7 @@ export default function UploadPage() {
       <h2>Upload a PDF</h2>
       <input type="file" accept="application/pdf,.pdf" onChange={event => setFile(event.target.files?.[0] || null)} />
       <button disabled={!file || busy} onClick={upload} style={{ marginLeft: 12 }}>Upload PDF</button>
-      <p>PDF only, maximum 10 MB and 300 pages. Scanned PDFs need OCR and are not supported here.</p>
+      <p>PDF only, maximum 10 MB and 300 pages. Scanned pages are processed with Google Document AI OCR.</p>
     </section>
     <section style={{ border: '1px solid #ccc', borderRadius: 8, padding: 20 }}>
       <h2>Ask about a document</h2>

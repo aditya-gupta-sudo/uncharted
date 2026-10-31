@@ -30,6 +30,7 @@ import { RerankingSummary } from '@/components/search/PositionIndicator';
 import { useSearch } from '@/hooks/useSearch';
 import { SearchMethod, HybridMethod, MultimodalSearchResponse } from '@/types/Search';
 import { searchService } from '@/services/searchService';
+import SearchUploadPanel from '@/components/documents/SearchUploadPanel';
 
 // Client Component that uses searchParams
 function SearchPageContent() {
@@ -267,6 +268,8 @@ function SearchPageContent() {
         }}>
           Car Manual Search
         </H1>
+
+        <SearchUploadPanel />
         
         {/* Search input - conditional based on method */}
         {searchMethod !== 'multimodal' ? (

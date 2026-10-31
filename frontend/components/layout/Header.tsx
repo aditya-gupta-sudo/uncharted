@@ -168,6 +168,30 @@ const Header: React.FC = () => {
               </Link>
             </li>
 
+            <li>
+              <Link
+                href="/upload"
+                aria-current={pathname?.startsWith('/upload') ? 'page' : undefined}
+                style={{
+                  color: palette.gray.light3,
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing[2],
+                  padding: `${spacing[2]}px ${spacing[4]}px`,
+                  borderRadius: '6px',
+                  transition: 'background-color 0.2s ease',
+                  backgroundColor: pathname?.startsWith('/upload') ? palette.green.dark1 : 'transparent',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = palette.green.dark1; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = pathname?.startsWith('/upload') ? palette.green.dark1 : 'transparent'; }}
+              >
+                <span style={{ fontFamily: "'Euclid Circular A', sans-serif" }}>Upload PDF</span>
+              </Link>
+            </li>
+
             <li style={{ marginLeft: spacing[2], display: 'flex', alignItems: 'center' }}>
               <Button
                 size="small"

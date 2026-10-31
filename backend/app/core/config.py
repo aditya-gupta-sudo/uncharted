@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     GCP_PROJECT_ID: str = Field(..., env="GCP_PROJECT_ID")
     GCP_LOCATION: str = Field("us-central1", env="GCP_LOCATION")
     GCP_CHAT_LOCATION: str = Field("global", env="GCP_CHAT_LOCATION")
+    DOCUMENT_AI_PROCESSOR_NAME: Optional[str] = Field(None, env="DOCUMENT_AI_PROCESSOR_NAME")
+    DOCUMENT_AI_LOCATION: str = Field("us", env="DOCUMENT_AI_LOCATION")
     
     # Model configuration - Hardcoded for car manuals
     EMBEDDINGS_MODEL_ID: str = "text-embedding-005"

@@ -103,7 +103,7 @@ Free Render services can sleep when idle and take longer to respond to the first
 
 ### PDF uploads and document Q&A
 
-The `/upload` page provides shared-workspace PDF ingestion and question answering. Uploads are limited to 10 MB and 300 pages; only PDFs with extractable text are accepted. Original PDF bytes are not retained. Upload records and page-level chunks are stored in MongoDB.
+The `/upload` page and Search page provide shared-workspace PDF ingestion and question answering. Uploads are limited to 10 MB and 300 pages. PDFs with missing page text are OCR-processed in 15-page batches through Google Document AI. Set `DOCUMENT_AI_PROCESSOR_NAME` to the full processor resource name (for example, `projects/PROJECT_ID/locations/us/processors/PROCESSOR_ID`) and `DOCUMENT_AI_LOCATION` to its region (`us` by default). Enable the Document AI API and grant the backend service account permission to use the processor. Original PDF bytes are not retained; upload records and page-level chunks are stored in MongoDB. OCR and embedding calls can incur Google Cloud charges.
 
 Document-scoped vector retrieval uses a separate Atlas index named `manual_documents_vector_index` so the existing `manual_vector_search_index` is not replaced. Create the new index on the `manuals` collection with a 768-dimensional cosine vector field `embedding` and a filter field `document_id` before using document Q&A. The existing manual search remains on its current index.
 

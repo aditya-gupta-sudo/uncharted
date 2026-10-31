@@ -20,6 +20,10 @@ services:
         value: us-central1
       - key: GCP_CHAT_LOCATION
         value: global
+      - key: DOCUMENT_AI_LOCATION
+        value: us
+      - key: DOCUMENT_AI_PROCESSOR_NAME
+        sync: false
       - key: CHATCOMPLETIONS_MODEL_ID
         value: gemini-3.8-flash
       - key: DOCUMENT_VECTOR_INDEX_NAME

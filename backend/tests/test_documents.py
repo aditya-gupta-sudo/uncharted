@@ -32,6 +32,29 @@ class FakeCollection:
 
 
 class DocumentUnitTests(unittest.IsolatedAsyncioTestCase):
+    def test_document_ai_ocr_splits_at_processor_page_limit(self):
+        from pypdf import PdfWriter
+        writer = PdfWriter()
+        for _ in range(16): writer.add_blank_page(width=100, height=100)
+        data = io.BytesIO(); writer.write(data)
+        class FakeResponse:
+            def raise_for_status(self): pass
+            def json(self): return {"document": {"text": "OCR", "pages": [
+                {"layout": {"textAnchor": {"textSegments": [{"startIndex": "0", "endIndex": "3"}]}}}
+                for _ in range(15)]}}
+        class FakeSession:
+            def __init__(self): self.counts = []
+            def post(self, url, json, timeout):
+                self.counts.append(len(json["rawDocument"]["content"]))
+                return FakeResponse()
+        session = FakeSession()
+        settings = SimpleNamespace(DOCUMENT_AI_PROCESSOR_NAME="projects/p/locations/us/processors/test", DOCUMENT_AI_LOCATION="us")
+        with patch.object(documents.google.auth, "default", return_value=(object(), "project")), \
+             patch.object(documents, "AuthorizedSession", return_value=session):
+            pages = documents._ocr_pdf_pages(data.getvalue(), 16, settings)
+        self.assertEqual(len(pages), 16)
+        self.assertEqual(len(session.counts), 2)
+
     async def test_embedding_service_batches_provider_requests(self):
         class FakeModel:
             def __init__(self): self.batch_sizes = []
