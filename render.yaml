@@ -24,10 +24,6 @@ services:
         sync: false
       - key: MULTIMODAL_VECTOR_INDEX_NAME
         sync: false
-      - key: AWS_ACCESS_KEY_ID
-        sync: false
-      - key: AWS_SECRET_ACCESS_KEY
-        sync: false
       - key: AWS_REGION
         value: us-east-1
 
